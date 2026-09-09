@@ -42,6 +42,33 @@
   will-change: transform;
 }
 
+/* Slow drifting color glows for the modern "now playing" background */
+@keyframes drift-1 {
+  0%, 100% { transform: translate(0%, 0%) scale(1); }
+  50% { transform: translate(8%, 6%) scale(1.15); }
+}
+@keyframes drift-2 {
+  0%, 100% { transform: translate(0%, 0%) scale(1); }
+  50% { transform: translate(-6%, -8%) scale(1.1); }
+}
+@keyframes drift-3 {
+  0%, 100% { transform: translate(0%, 0%) scale(1); }
+  50% { transform: translate(-10%, 5%) scale(1.2); }
+}
+
+.animate-drift-1 {
+  animation: drift-1 22s ease-in-out infinite;
+  will-change: transform;
+}
+.animate-drift-2 {
+  animation: drift-2 26s ease-in-out infinite;
+  will-change: transform;
+}
+.animate-drift-3 {
+  animation: drift-3 30s ease-in-out infinite;
+  will-change: transform;
+}
+
 /* Glassmorphism Classes */
 .glass-panel {
   background: rgba(18, 24, 38, 0.45);

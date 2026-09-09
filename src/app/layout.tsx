@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Moonwave — Minimal Full-Screen Cinematic Music",
+  title: "Aetheria — Minimal Full-Screen Cinematic Music",
   description:
     "An atmospheric, peaceful full-screen music sanctuary streaming ambient soundscapes paired with slow-zooming scenic landscapes.",
   keywords: [
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     "focus music",
     "ken burns",
   ],
-  authors: [{ name: "Moonwave" }],
+  authors: [{ name: "Aetheria" }],
 };
 
 export const viewport: Viewport = {

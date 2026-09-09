@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { Song, MusicMood } from "@/types";
+import React, { useMemo, useState } from "react";
+import { Song, MusicMood, LyricLine, LyricsStatus } from "@/types";
 import {
   Play,
   Pause,
@@ -12,11 +12,12 @@ import {
   Volume1,
   Maximize2,
   Minimize2,
-  Image as ImageIcon,
   Sparkles,
   Disc3,
   Video,
   VideoOff,
+  Captions,
+  CaptionsOff,
 } from "lucide-react";
 
 interface GlassPlayerProps {
@@ -31,6 +32,9 @@ interface GlassPlayerProps {
   isVideoVisible: boolean;
   isControlsVisible: boolean;
   isFullscreen: boolean;
+  isLyricsVisible: boolean;
+  lyricsLines: LyricLine[] | null;
+  lyricsStatus: LyricsStatus;
   onTogglePlay: () => void;
   onNext: () => void;
   onPrevious: () => void;
@@ -38,7 +42,7 @@ interface GlassPlayerProps {
   onVolumeChange: (vol: number) => void;
   onToggleMute: () => void;
   onToggleVideo: () => void;
-  onChangeBackground: () => void;
+  onToggleLyrics: () => void;
   onChangeMood: (mood: MusicMood) => void;
   onToggleFullscreen: () => void;
 }
@@ -48,6 +52,55 @@ function formatTime(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
+// Lines are sorted by time; find the last line whose timestamp has passed.
+function findActiveLyricIndex(lines: LyricLine[], currentTime: number): number {
+  let lo = 0;
+  let hi = lines.length - 1;
+  let result = -1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (lines[mid].time <= currentTime) {
+      result = mid;
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return result;
+}
+
+function LyricsTicker({
+  lines,
+  status,
+  currentTime,
+}: {
+  lines: LyricLine[] | null;
+  status: LyricsStatus;
+  currentTime: number;
+}) {
+  const activeLine = useMemo(() => {
+    if (status === "loading") return "Finding lyrics…";
+    if (!lines || lines.length === 0) return null;
+    const idx = findActiveLyricIndex(lines, currentTime);
+    return idx >= 0 ? lines[idx].text || null : null;
+  }, [lines, status, currentTime]);
+
+  // Collapse entirely (no reserved space) when there's nothing to show, so
+  // the player bar doesn't carry an empty gap for tracks without lyrics.
+  if (!activeLine) return null;
+
+  return (
+    <div className="px-1 -mt-0.5 mb-0.5 overflow-hidden">
+      <p
+        key={activeLine}
+        className="text-center text-[11px] sm:text-xs font-medium text-emerald-200/90 tracking-wide truncate animate-in fade-in duration-300"
+      >
+        {activeLine}
+      </p>
+    </div>
+  );
 }
 
 export default function GlassPlayer({
@@ -62,6 +115,9 @@ export default function GlassPlayer({
   isVideoVisible,
   isControlsVisible,
   isFullscreen,
+  isLyricsVisible,
+  lyricsLines,
+  lyricsStatus,
   onTogglePlay,
   onNext,
   onPrevious,
@@ -69,7 +125,7 @@ export default function GlassPlayer({
   onVolumeChange,
   onToggleMute,
   onToggleVideo,
-  onChangeBackground,
+  onToggleLyrics,
   onChangeMood,
   onToggleFullscreen,
 }: GlassPlayerProps) {
@@ -98,19 +154,29 @@ export default function GlassPlayer({
 
   return (
     <div
-      className={`fixed bottom-0 inset-x-0 z-40 p-3 sm:p-5 transition-all duration-700 pointer-events-none flex justify-center ${
+      className={`fixed bottom-0 inset-x-0 z-40 p-2.5 sm:p-5 transition-all duration-700 pointer-events-none flex justify-center ${
         isControlsVisible
           ? "opacity-100 translate-y-0"
           : "opacity-0 translate-y-8"
       }`}
     >
-      <div className="glass-panel w-full max-w-5xl rounded-2xl sm:rounded-3xl p-3.5 sm:px-6 sm:py-3.5 pointer-events-auto flex flex-col gap-2.5 transition-all duration-300 shadow-2xl">
+      <div className="glass-panel w-full max-w-5xl rounded-2xl sm:rounded-3xl p-3 sm:px-6 sm:py-3.5 pointer-events-auto flex flex-col gap-1.5 sm:gap-2.5 transition-all duration-300 shadow-2xl">
+        {/* Time-synced lyrics ticker, appears right in the player bar */}
+        {isLyricsVisible && (
+          <LyricsTicker
+            lines={lyricsLines}
+            status={lyricsStatus}
+            currentTime={currentTime}
+          />
+        )}
+
         {/* Upper row: Track Details & Playback Controls & Ambient Tools */}
-        <div className="flex items-center justify-between gap-3 sm:gap-6">
+        <div className="flex items-center justify-between gap-2 sm:gap-6">
           {/* Left: Artwork and Track Info */}
-          <div className="flex items-center gap-3 min-w-0 flex-1 sm:max-w-xs">
-            <div className="relative w-11 h-11 sm:w-13 sm:h-13 rounded-xl overflow-hidden shrink-0 shadow-lg border border-white/15 group">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 sm:max-w-xs">
+            <div className="relative w-10 h-10 sm:w-13 sm:h-13 rounded-xl overflow-hidden shrink-0 shadow-lg border border-white/15 group">
               {currentSong?.artwork ? (
+                // eslint-disable-next-line @next/next/no-img-element -- artwork comes from scraped YouTube thumbnail URLs, too varied for a static next/image allowlist.
                 <img
                   src={currentSong.artwork}
                   alt={currentSong.title}
@@ -146,7 +212,7 @@ export default function GlassPlayer({
                   : currentSong?.title || "Playing Track"}
               </h3>
               <p
-                className="text-white/60 text-[11px] sm:text-xs font-light truncate mt-0.5"
+                className="text-white/60 text-[10px] sm:text-xs font-light truncate mt-0.5"
                 title={currentSong?.artist}
               >
                 {currentSong?.artist || "Music Stream"}
@@ -155,61 +221,76 @@ export default function GlassPlayer({
           </div>
 
           {/* Center: Main Playback Controls */}
-          <div className="flex items-center gap-2 sm:gap-3.5 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-3.5 shrink-0">
             <button
               onClick={onPrevious}
               title="Previous song"
-              className="glass-button w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white/80 hover:text-white cursor-pointer"
+              className="glass-button w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white/80 hover:text-white cursor-pointer"
             >
-              <SkipBack className="w-4 h-4" />
+              <SkipBack className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
 
             <button
               onClick={onTogglePlay}
               title={isPlaying ? "Pause" : "Play"}
               disabled={isLoading}
-              className="relative group w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 border border-white/40 flex items-center justify-center text-white cursor-pointer transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:shadow-[0_0_25px_rgba(255,255,255,0.35)]"
+              className="relative group w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 border border-white/40 flex items-center justify-center text-white cursor-pointer transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:shadow-[0_0_25px_rgba(255,255,255,0.35)]"
             >
               {isLoading ? (
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : isPlaying ? (
-                <Pause className="w-5 h-5 fill-white" />
+                <Pause className="w-4 h-4 sm:w-5 sm:h-5 fill-white" />
               ) : (
-                <Play className="w-5 h-5 fill-white translate-x-0.5" />
+                <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-white translate-x-0.5" />
               )}
             </button>
 
             <button
               onClick={onNext}
               title="Next song"
-              className="glass-button w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white/80 hover:text-white cursor-pointer"
+              className="glass-button w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white/80 hover:text-white cursor-pointer"
             >
-              <SkipForward className="w-4 h-4" />
+              <SkipForward className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
           </div>
 
           {/* Right: Ambient actions */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* Centered Video Toggle */}
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            {/* Video Toggle */}
             <button
               onClick={onToggleVideo}
-              title={
-                isVideoVisible ? "Hide Centered Video" : "Show Centered Video"
-              }
-              className={`glass-button w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center cursor-pointer transition-all ${
+              title={isVideoVisible ? "Hide Video" : "Show Video"}
+              className={`glass-button w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center cursor-pointer transition-all ${
                 isVideoVisible
                   ? "text-emerald-300 border-emerald-400/40 bg-emerald-500/15"
                   : "text-white/60 hover:text-white"
               }`}
             >
               {isVideoVisible ? (
-                <Video className="w-4 h-4" />
+                <Video className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               ) : (
-                <VideoOff className="w-4 h-4" />
+                <VideoOff className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               )}
             </button>
 
-            {/* Volume Control */}
+            {/* Lyrics Toggle */}
+            <button
+              onClick={onToggleLyrics}
+              title={isLyricsVisible ? "Hide Lyrics" : "Show Lyrics"}
+              className={`glass-button w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center cursor-pointer transition-all ${
+                isLyricsVisible
+                  ? "text-emerald-300 border-emerald-400/40 bg-emerald-500/15"
+                  : "text-white/60 hover:text-white"
+              }`}
+            >
+              {isLyricsVisible ? (
+                <Captions className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              ) : (
+                <CaptionsOff className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              )}
+            </button>
+
+            {/* Volume Control (desktop/tablet only — a slider is impractical at phone widths) */}
             <div className="hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-full glass-pill">
               <button
                 onClick={onToggleMute}
@@ -237,7 +318,7 @@ export default function GlassPlayer({
               <button
                 onClick={() => setShowMoodMenu((p) => !p)}
                 title="Change Music Mix"
-                className="glass-button px-2.5 sm:px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs text-white/90 hover:text-white cursor-pointer"
+                className="glass-button px-2 sm:px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs text-white/90 hover:text-white cursor-pointer"
               >
                 <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
                 <span className="hidden sm:inline font-medium">
@@ -273,20 +354,11 @@ export default function GlassPlayer({
               )}
             </div>
 
-            {/* Next Scenery Background */}
-            <button
-              onClick={onChangeBackground}
-              title="Change Scenic Background"
-              className="glass-button w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white/80 hover:text-white cursor-pointer"
-            >
-              <ImageIcon className="w-4 h-4" />
-            </button>
-
-            {/* Fullscreen Toggle */}
+            {/* Fullscreen Toggle (hidden on phones — no room, and most mobile browsers handle fullscreen via their own UI) */}
             <button
               onClick={onToggleFullscreen}
               title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-              className="glass-button w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white/80 hover:text-white cursor-pointer"
+              className="hidden sm:flex glass-button w-9 h-9 sm:w-10 sm:h-10 rounded-full items-center justify-center text-white/80 hover:text-white cursor-pointer"
             >
               {isFullscreen ? (
                 <Minimize2 className="w-4 h-4" />
@@ -298,8 +370,8 @@ export default function GlassPlayer({
         </div>
 
         {/* Lower row: Progress Slider and Timestamps */}
-        <div className="flex items-center gap-3 px-1">
-          <span className="font-mono text-[10px] sm:text-xs text-white/60 w-9 text-right shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 px-1">
+          <span className="font-mono text-[10px] sm:text-xs text-white/60 w-8 sm:w-9 text-right shrink-0">
             {formatTime(currentTime)}
           </span>
 
@@ -322,7 +394,7 @@ export default function GlassPlayer({
             />
           </div>
 
-          <span className="font-mono text-[10px] sm:text-xs text-white/60 w-9 text-left shrink-0">
+          <span className="font-mono text-[10px] sm:text-xs text-white/60 w-8 sm:w-9 text-left shrink-0">
             {formatTime(duration)}
           </span>
         </div>

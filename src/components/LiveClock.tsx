@@ -1,31 +1,31 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 export default function LiveClock() {
-  const [timeStr, setTimeStr] = useState<string>('');
-  const [dateStr, setDateStr] = useState<string>('');
-  const [secondsStr, setSecondsStr] = useState<string>('');
+  const [timeStr, setTimeStr] = useState<string>("");
+  const [dateStr, setDateStr] = useState<string>("");
+  const [secondsStr, setSecondsStr] = useState<string>("");
   const [use24Hour, setUse24Hour] = useState<boolean>(false);
 
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
-      
-      const timeFormatter = new Intl.DateTimeFormat('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
+
+      const timeFormatter = new Intl.DateTimeFormat("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
         hour12: !use24Hour,
       });
 
-      const dateFormatter = new Intl.DateTimeFormat('en-US', {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
+      const dateFormatter = new Intl.DateTimeFormat("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
       });
 
       setTimeStr(timeFormatter.format(now));
-      setSecondsStr(String(now.getSeconds()).padStart(2, '0'));
+      setSecondsStr(String(now.getSeconds()).padStart(2, "0"));
       setDateStr(dateFormatter.format(now));
     };
 
