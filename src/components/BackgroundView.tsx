@@ -1,72 +1,84 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { ScenicImage } from "@/types";
+import React, { useState } from 'react';
+import { Song } from '@/types';
 
 interface BackgroundViewProps {
-  currentImage: ScenicImage | null;
+  song: Song | null;
 }
 
-function imageKey(image: ScenicImage | null): string | null {
-  return image ? `${image.id}|${image.url}` : null;
+function artworkKey(song: Song | null): string | null {
+  return song ? `${song.videoId}|${song.artwork}` : null;
 }
 
-export default function BackgroundView({ currentImage }: BackgroundViewProps) {
-  const [activeLayer, setActiveLayer] = useState<"A" | "B">("A");
-  const [layerA, setLayerA] = useState<ScenicImage | null>(currentImage);
-  const [layerB, setLayerB] = useState<ScenicImage | null>(null);
-  const [lastKey, setLastKey] = useState<string | null>(imageKey(currentImage));
+export default function BackgroundView({ song }: BackgroundViewProps) {
+  const [activeLayer, setActiveLayer] = useState<'A' | 'B'>('A');
+  const [layerA, setLayerA] = useState<Song | null>(song);
+  const [layerB, setLayerB] = useState<Song | null>(null);
+  const [lastKey, setLastKey] = useState<string | null>(artworkKey(song));
 
-  const nextKey = imageKey(currentImage);
+
+  const nextKey = artworkKey(song);
   if (nextKey !== null && nextKey !== lastKey) {
     setLastKey(nextKey);
-    if (activeLayer === "A") {
-      setLayerB(currentImage);
-      setActiveLayer("B");
+    if (activeLayer === 'A') {
+      setLayerB(song);
+      setActiveLayer('B');
     } else {
-      setLayerA(currentImage);
-      setActiveLayer("A");
+      setLayerA(song);
+      setActiveLayer('A');
     }
   }
 
   return (
-    <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none bg-black select-none">
-      {/* Layer A */}
+    <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none bg-[#05070d] select-none">
+    
+      <div className="absolute inset-0 bg-gradient-to-br from-[#0f1c2e] via-[#0a0f1c] to-[#05070d]" />
+
+      {/* Slowly drifting color glows for a modern "now playing" feel */}
+      <div className="absolute -top-1/4 -left-1/4 w-[70vw] h-[70vw] rounded-full bg-emerald-500/20 blur-[120px] animate-drift-1" />
+      <div className="absolute -bottom-1/4 -right-1/4 w-[65vw] h-[65vw] rounded-full bg-teal-400/15 blur-[120px] animate-drift-2" />
+      <div className="absolute top-1/3 right-0 w-[45vw] h-[45vw] rounded-full bg-fuchsia-500/10 blur-[110px] animate-drift-3" />
+
+      {/* Layer A: blurred album artwork */}
       <div
-        className={`absolute -inset-2 w-[calc(100%+1rem)] h-[calc(100%+1rem)] transition-opacity duration-1000 ease-in-out ${
-          activeLayer === "A" ? "opacity-100" : "opacity-0"
+        className={`absolute -inset-10 transition-opacity duration-1000 ease-in-out ${
+          activeLayer === 'A' ? 'opacity-100' : 'opacity-0'
         }`}
       >
-        {layerA && (
-          // eslint-disable-next-line @next/next/no-img-element -- source domains are dynamic/unpredictable (Unsplash, Wikimedia, etc.), so next/image's static remotePatterns allowlist isn't a good fit here.
+        {layerA?.artwork && (
+          // eslint-disable-next-line @next/next/no-img-element -- artwork comes from scraped YouTube thumbnail URLs, which vary too much for a static next/image remotePatterns allowlist.
           <img
-            src={layerA.url}
+            src={layerA.artwork}
             alt=""
-            className="w-full h-full object-cover object-center animate-kenburns"
+            className="w-full h-full object-cover object-center blur-3xl scale-110 opacity-60 animate-kenburns"
           />
         )}
       </div>
 
-      {/* Layer B */}
+      {/* Layer B: blurred album artwork */}
       <div
-        className={`absolute -inset-2 w-[calc(100%+1rem)] h-[calc(100%+1rem)] transition-opacity duration-1000 ease-in-out ${
-          activeLayer === "B" ? "opacity-100" : "opacity-0"
+        className={`absolute -inset-10 transition-opacity duration-1000 ease-in-out ${
+          activeLayer === 'B' ? 'opacity-100' : 'opacity-0'
         }`}
       >
-        {layerB && (
+        {layerB?.artwork && (
           // eslint-disable-next-line @next/next/no-img-element -- see note above
           <img
-            src={layerB.url}
+            src={layerB.artwork}
             alt=""
-            className="w-full h-full object-cover object-center animate-kenburns"
+            className="w-full h-full object-cover object-center blur-3xl scale-110 opacity-60 animate-kenburns"
           />
         )}
       </div>
 
-      {/* Subtle Gentle Bottom Vignette for Player Controls Legibility */}
-      <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-black/85 via-black/30 to-transparent pointer-events-none z-10" />
+      {/* Dark wash so foreground text/controls stay legible over any artwork */}
+      <div className="absolute inset-0 bg-black/35" />
 
-      {/* Subtle Top Vignette for Live Clock */}
+      {/* Bottom Vignette for Player Controls Legibility */}
+      <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-black/85 via-black/30 to-transparent pointer-events-none z-10" />
+
+      {/* Top Vignette for Live Clock */}
       <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/60 to-transparent pointer-events-none z-10" />
     </div>
   );

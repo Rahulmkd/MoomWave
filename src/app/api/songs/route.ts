@@ -3,51 +3,115 @@ import { Song } from "@/types";
 
 export const dynamic = "force-dynamic";
 
+// const ALL_MIX_QUERIES = [
+//   "latest romantic bollywood songs 2026",
+//   "latest hindi songs 2026",
+//   "top billboard english pop songs 2026",
+//   "latest hindi romantic songs 2026",
+//   "new hindi indie songs 2026",
+//   "latest punjabi songs 2026",
+//   "latest bihari songs 2026",
+//   "latest maithili songs 2026",
+//   "best sharda sinha songs",
+//   "latest coke studio songs 2026",
+//   "latest haryanvi songs 2026",
+//   "latest tamil telugu songs 2026",
+//   "latest bengali songs 2026",
+//   "latest relaxing songs 2026",
+//   "latest hollywood movie songs 2026",
+// ];
+
+// const GENRE_QUERIES: Record<string, string[]> = {
+//   mix: ALL_MIX_QUERIES,
+
+//   bollywood: [
+//     "latest bollywood songs 2026",
+//     "latest hindi romantic songs 2026",
+//     "top hindi songs 2026",
+//     "latest hindi indie songs 2026",
+//     "popular hindi songs 2026",
+//   ],
+
+//   regional: [
+//     "latest bihari songs 2026",
+//     "latest maithili songs 2026",
+//     "latest punjabi songs 2026",
+//     "latest haryanvi songs 2026",
+//     "latest tamil songs 2026",
+//     "latest telugu songs 2026",
+//     "latest bengali songs 2026",
+//   ],
+
+//   hollywood: [
+//     "latest english songs 2026",
+//     "top billboard songs 2026",
+//     "latest english pop hits 2026",
+//     "popular hollywood songs 2026",
+//     "latest movie songs 2026",
+//   ],
+
+//   cinematic: [
+//     "latest movie background music 2026",
+//     "latest film music 2026",
+//     "best movie songs 2026",
+//     "latest instrumental music 2026",
+//     "popular soundtrack songs 2026",
+//   ],
+// };
+
 const ALL_MIX_QUERIES = [
-  "best romantic bollywood acoustic songs",
-  "top billboard acoustic english pop hits",
-  "soulful bollywood melodies arijit singh",
-  "hindi indie acoustic songs anuv jain",
-  "punjabi acoustic soulful melody songs",
-  "bihari traditional songs soothing",
-  "maithili traditional melody songs acoustic",
-  "sharda sinha soothing melodies",
-  "coke studio hindi soulful songs",
-  "haryanvi songs acoustic melodies",
-  "tamil telugu melody songs acoustic",
-  "bengali acoustic baul songs",
-  "cinematic ambient soundscape relaxing",
-  "hollywood movie soundtrack emotional chill",
+  "latest romantic bollywood songs",
+  "top hindi songs",
+  "top billboard english pop hits",
+  "latest hindi romantic songs",
+  "popular hindi indie songs",
+  "latest punjabi songs",
+  "popular bihari songs",
+  "popular maithili songs",
+  "best sharda sinha songs",
+  "popular coke studio songs",
+  "latest haryanvi songs",
+  "latest tamil telugu songs",
+  "popular bengali songs",
+  "best relaxing songs",
+  "popular hollywood movie songs",
 ];
 
 const GENRE_QUERIES: Record<string, string[]> = {
   mix: ALL_MIX_QUERIES,
+
   bollywood: [
-    "best romantic bollywood songs acoustic",
-    "bollywood acoustic unplugged melodies",
-    "arijit singh soulful bollywood hits",
-    "hindi indie acoustic songs anuv jain",
-    "coke studio hindi soulful unplugged",
+    "latest bollywood songs",
+    "latest hindi romantic songs",
+    "top hindi songs",
+    "popular hindi indie songs",
+    "best bollywood love songs",
   ],
+
   regional: [
-    "bihari traditional songs soothing",
-    "maithili traditional melody songs acoustic",
-    "punjabi acoustic soulful melody songs",
-    "haryanvi songs acoustic melodies",
-    "tamil telugu melody songs acoustic",
-    "bengali acoustic baul songs",
+    "popular bihari songs",
+    "popular maithili songs",
+    "latest punjabi songs",
+    "latest haryanvi songs",
+    "latest tamil songs",
+    "latest telugu songs",
+    "popular bengali songs",
   ],
+
   hollywood: [
-    "top acoustic english pop songs billboard",
-    "hollywood movie soundtrack emotional chill",
-    "english chill melodic hits acoustic",
-    "coldplay ed sheeran acoustic style",
+    "latest english songs",
+    "top billboard songs",
+    "latest english pop hits",
+    "popular hollywood songs",
+    "latest movie songs",
   ],
+
   cinematic: [
-    "cinematic ambient soundtrack music",
-    "hans zimmer peaceful atmospheric",
-    "cinematic emotional piano soundscape",
-    "deep atmospheric ambient music",
+    "best movie background music",
+    "popular film music",
+    "best movie songs",
+    "popular instrumental music",
+    "best soundtrack songs",
   ],
 };
 
@@ -210,14 +274,7 @@ async function searchYouTubeOnline(query: string): Promise<Song[]> {
   }
 }
 
-// Small in-memory pool cache, keyed by mood. Scraping YouTube's search page
-// is by far the slowest and least reliable part of this route (up to the
-// 6s fetch timeout), so repeated requests for the same mood within the TTL
-// (e.g. the client polling for more songs, or several users picking the
-// same mood) get served from this pool instead of re-scraping every time.
-// Variety is preserved via the existing exclude-list filtering below. Note
-// this cache is per server instance/process, which is fine here since it's
-// purely a latency optimization, not a correctness requirement.
+
 const SONG_POOL_TTL_MS = 5 * 60 * 1000;
 const songPoolCache = new Map<string, { songs: Song[]; fetchedAt: number }>();
 
@@ -255,7 +312,10 @@ export async function GET(request: NextRequest) {
       }
 
       if (!queryParam && allSongs.length > 0) {
-        songPoolCache.set(moodParam, { songs: allSongs, fetchedAt: Date.now() });
+        songPoolCache.set(moodParam, {
+          songs: allSongs,
+          fetchedAt: Date.now(),
+        });
       }
     }
 

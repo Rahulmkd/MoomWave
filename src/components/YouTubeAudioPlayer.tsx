@@ -345,6 +345,8 @@ const YouTubeAudioPlayer = forwardRef<
       };
 
       initPlayer();
+
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isApiLoaded, currentSong?.videoId]);
 
     // Volume updates

@@ -8,19 +8,12 @@ export interface Song {
   mood?: string;
 }
 
-export interface ScenicImage {
-  id: string;
-  url: string;
-  blurUrl?: string;
-  title: string;
-  author: string;
-  location?: string;
-  category: 'mountain' | 'valley' | 'sunset' | 'travel';
+export type MusicMood =
+  "mix" | "bollywood" | "regional" | "hollywood" | "cinematic";
+
+export interface LyricLine {
+  time: number; // seconds
+  text: string;
 }
 
-export type MusicMood =
-  | 'mix'
-  | 'bollywood'
-  | 'regional'
-  | 'hollywood'
-  | 'cinematic';
+export type LyricsStatus = "idle" | "loading" | "found" | "not_found";
