@@ -378,7 +378,7 @@ export default function GlassPlayer({
           <div className="relative flex-1 group flex items-center py-1">
             <div className="w-full h-1 sm:h-1.5 rounded-full bg-white/15 overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-emerald-400 to-teal-300 rounded-full transition-all duration-150"
+                className="h-full bg-linear-to-r from-emerald-400 to-teal-300 rounded-full transition-all duration-150"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>

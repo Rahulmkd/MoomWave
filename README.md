@@ -2,7 +2,7 @@
 
 **A full-screen, modern music player experience** — pairs mood-based streaming audio with a "Now Playing"–style background driven by the current track's own album art, wrapped in a minimal glassmorphism UI. No accounts, no library management: pick a mood and it curates a soundtrack for you.
 
-> **Note:** the browser tab title currently reads "Aetheria" (`src/app/layout.tsx`), a leftover from an earlier project name. It's cosmetic only — update the `metadata.title` in that file if you want it to say "Moonwave" instead.
+> **Note:** the browser tab title currently reads "MoonWave" (`src/app/layout.tsx`), a leftover from an earlier project name. It's cosmetic only — update the `metadata.title` in that file if you want it to say "Moonwave" instead.
 
 ---
 
