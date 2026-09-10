@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 
 export default function LiveClock() {
   const [timeStr, setTimeStr] = useState<string>("");
-  const [dateStr, setDateStr] = useState<string>("");
   const [secondsStr, setSecondsStr] = useState<string>("");
   const [use24Hour, setUse24Hour] = useState<boolean>(false);
 
@@ -18,15 +17,8 @@ export default function LiveClock() {
         hour12: !use24Hour,
       });
 
-      const dateFormatter = new Intl.DateTimeFormat("en-US", {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-      });
-
       setTimeStr(timeFormatter.format(now));
       setSecondsStr(String(now.getSeconds()).padStart(2, "0"));
-      setDateStr(dateFormatter.format(now));
     };
 
     updateTime();
@@ -55,10 +47,6 @@ export default function LiveClock() {
           :{secondsStr}
         </span>
       </div>
-      <span className="text-white/20 font-light text-xs">|</span>
-      <span className="text-xs text-white/70 font-light tracking-wide hidden sm:inline-block">
-        {dateStr}
-      </span>
     </button>
   );
 }

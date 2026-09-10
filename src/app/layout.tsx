@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "MoonWave — Music",
+  title: "MoonWave — Feel Music",
   description:
     "An atmospheric, peaceful full-screen music sanctuary streaming ambient soundscapes paired with slow-zooming scenic landscapes.",
   keywords: [

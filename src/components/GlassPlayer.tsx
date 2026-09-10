@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { Song, MusicMood, LyricLine, LyricsStatus } from "@/types";
+import React, { useState } from "react";
+import { Song, MusicMood } from "@/types";
 import {
   Play,
   Pause,
@@ -10,14 +10,10 @@ import {
   Volume2,
   VolumeX,
   Volume1,
-  Maximize2,
-  Minimize2,
   Sparkles,
   Disc3,
   Video,
   VideoOff,
-  Captions,
-  CaptionsOff,
 } from "lucide-react";
 
 interface GlassPlayerProps {
@@ -30,11 +26,6 @@ interface GlassPlayerProps {
   isLoading: boolean;
   mood: MusicMood;
   isVideoVisible: boolean;
-  isControlsVisible: boolean;
-  isFullscreen: boolean;
-  isLyricsVisible: boolean;
-  lyricsLines: LyricLine[] | null;
-  lyricsStatus: LyricsStatus;
   onTogglePlay: () => void;
   onNext: () => void;
   onPrevious: () => void;
@@ -42,9 +33,7 @@ interface GlassPlayerProps {
   onVolumeChange: (vol: number) => void;
   onToggleMute: () => void;
   onToggleVideo: () => void;
-  onToggleLyrics: () => void;
   onChangeMood: (mood: MusicMood) => void;
-  onToggleFullscreen: () => void;
 }
 
 function formatTime(seconds: number): string {
@@ -52,55 +41,6 @@ function formatTime(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins}:${secs.toString().padStart(2, "0")}`;
-}
-
-// Lines are sorted by time; find the last line whose timestamp has passed.
-function findActiveLyricIndex(lines: LyricLine[], currentTime: number): number {
-  let lo = 0;
-  let hi = lines.length - 1;
-  let result = -1;
-  while (lo <= hi) {
-    const mid = (lo + hi) >> 1;
-    if (lines[mid].time <= currentTime) {
-      result = mid;
-      lo = mid + 1;
-    } else {
-      hi = mid - 1;
-    }
-  }
-  return result;
-}
-
-function LyricsTicker({
-  lines,
-  status,
-  currentTime,
-}: {
-  lines: LyricLine[] | null;
-  status: LyricsStatus;
-  currentTime: number;
-}) {
-  const activeLine = useMemo(() => {
-    if (status === "loading") return "Finding lyrics…";
-    if (!lines || lines.length === 0) return null;
-    const idx = findActiveLyricIndex(lines, currentTime);
-    return idx >= 0 ? lines[idx].text || null : null;
-  }, [lines, status, currentTime]);
-
-  // Collapse entirely (no reserved space) when there's nothing to show, so
-  // the player bar doesn't carry an empty gap for tracks without lyrics.
-  if (!activeLine) return null;
-
-  return (
-    <div className="px-1 -mt-0.5 mb-0.5 overflow-hidden">
-      <p
-        key={activeLine}
-        className="text-center text-[11px] sm:text-xs font-medium text-emerald-200/90 tracking-wide truncate animate-in fade-in duration-300"
-      >
-        {activeLine}
-      </p>
-    </div>
-  );
 }
 
 export default function GlassPlayer({
@@ -113,11 +53,6 @@ export default function GlassPlayer({
   isLoading,
   mood,
   isVideoVisible,
-  isControlsVisible,
-  isFullscreen,
-  isLyricsVisible,
-  lyricsLines,
-  lyricsStatus,
   onTogglePlay,
   onNext,
   onPrevious,
@@ -125,9 +60,7 @@ export default function GlassPlayer({
   onVolumeChange,
   onToggleMute,
   onToggleVideo,
-  onToggleLyrics,
   onChangeMood,
-  onToggleFullscreen,
 }: GlassPlayerProps) {
   const [showMoodMenu, setShowMoodMenu] = useState(false);
 
@@ -153,23 +86,8 @@ export default function GlassPlayer({
   const currentLabel = moods.find((m) => m.id === mood)?.label || "All Mix";
 
   return (
-    <div
-      className={`fixed bottom-0 inset-x-0 z-40 p-2.5 sm:p-5 transition-all duration-700 pointer-events-none flex justify-center ${
-        isControlsVisible
-          ? "opacity-100 translate-y-0"
-          : "opacity-0 translate-y-8"
-      }`}
-    >
+    <div className="fixed bottom-0 inset-x-0 z-40 p-2.5 sm:p-5 pointer-events-none flex justify-center">
       <div className="glass-panel w-full max-w-5xl rounded-2xl sm:rounded-3xl p-3 sm:px-6 sm:py-3.5 pointer-events-auto flex flex-col gap-1.5 sm:gap-2.5 transition-all duration-300 shadow-2xl">
-        {/* Time-synced lyrics ticker, appears right in the player bar */}
-        {isLyricsVisible && (
-          <LyricsTicker
-            lines={lyricsLines}
-            status={lyricsStatus}
-            currentTime={currentTime}
-          />
-        )}
-
         {/* Upper row: Track Details & Playback Controls & Ambient Tools */}
         <div className="flex items-center justify-between gap-2 sm:gap-6">
           {/* Left: Artwork and Track Info */}
@@ -273,23 +191,6 @@ export default function GlassPlayer({
               )}
             </button>
 
-            {/* Lyrics Toggle */}
-            <button
-              onClick={onToggleLyrics}
-              title={isLyricsVisible ? "Hide Lyrics" : "Show Lyrics"}
-              className={`glass-button w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center cursor-pointer transition-all ${
-                isLyricsVisible
-                  ? "text-emerald-300 border-emerald-400/40 bg-emerald-500/15"
-                  : "text-white/60 hover:text-white"
-              }`}
-            >
-              {isLyricsVisible ? (
-                <Captions className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              ) : (
-                <CaptionsOff className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              )}
-            </button>
-
             {/* Volume Control (desktop/tablet only — a slider is impractical at phone widths) */}
             <div className="hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-full glass-pill">
               <button
@@ -353,19 +254,6 @@ export default function GlassPlayer({
                 </div>
               )}
             </div>
-
-            {/* Fullscreen Toggle (hidden on phones — no room, and most mobile browsers handle fullscreen via their own UI) */}
-            <button
-              onClick={onToggleFullscreen}
-              title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-              className="hidden sm:flex glass-button w-9 h-9 sm:w-10 sm:h-10 rounded-full items-center justify-center text-white/80 hover:text-white cursor-pointer"
-            >
-              {isFullscreen ? (
-                <Minimize2 className="w-4 h-4" />
-              ) : (
-                <Maximize2 className="w-4 h-4" />
-              )}
-            </button>
           </div>
         </div>
 
