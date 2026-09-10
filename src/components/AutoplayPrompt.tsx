@@ -1,78 +1,57 @@
 "use client";
 
 import React from "react";
-import { Play, Sparkles, Volume2 } from "lucide-react";
+import { Play } from "lucide-react";
 
 interface AutoplayPromptProps {
   isVisible: boolean;
   onStart: () => void;
-  trackTitle?: string;
-  artistName?: string;
 }
 
 export default function AutoplayPrompt({
   isVisible,
   onStart,
-  trackTitle,
-  artistName,
 }: AutoplayPromptProps) {
   if (!isVisible) return null;
 
   return (
     <div
       onClick={onStart}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md transition-all duration-700 cursor-pointer p-4 animate-in fade-in select-none"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 cursor-pointer animate-in fade-in duration-700 select-none"
     >
       <div
-        onClick={(e) => {
-          e.stopPropagation();
-          onStart();
-        }}
-        className="glass-panel relative max-w-md w-full p-6 sm:p-8 rounded-3xl text-center flex flex-col items-center gap-4 sm:gap-5 border border-white/20 shadow-2xl hover:border-white/35 transition-all duration-300 hover:scale-[1.02] group"
+        onClick={(e) => e.stopPropagation()}
+        className="glass-panel relative w-full max-w-sm rounded-3xl border border-white/20 bg-white/5 p-6 text-center shadow-2xl transition-all duration-300 hover:border-white/35 hover:scale-[1.02]"
       >
         {/* Ambient Glow */}
-        <div className="absolute -top-12 inset-x-0 mx-auto w-32 h-32 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="pointer-events-none absolute -top-12 inset-x-0 mx-auto h-32 w-32 rounded-full bg-emerald-500/20 blur-3xl" />
 
-        {/* Pulsing Play Button */}
-        <div className="relative">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/10 group-hover:bg-white/20 border border-white/30 flex items-center justify-center transition-all duration-300 shadow-[0_0_30px_rgba(255,255,255,0.15)] group-hover:shadow-[0_0_40px_rgba(255,255,255,0.3)]">
-            <Play className="w-7 h-7 sm:w-8 sm:h-8 text-white fill-white translate-x-0.5 group-hover:scale-110 transition-transform" />
-          </div>
-          <div className="absolute -inset-2 rounded-full border border-white/20 animate-ping opacity-30 pointer-events-none" />
-        </div>
+        {/* Play Button */}
+        <button
+          onClick={onStart}
+          className="group relative mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-white/30 bg-white/10 shadow-[0_0_30px_rgba(255,255,255,0.15)] transition-all duration-300 hover:bg-white/20 hover:shadow-[0_0_40px_rgba(255,255,255,0.3)]"
+        >
+          <Play className="ml-1 h-8 w-8 fill-white text-white transition-transform group-hover:scale-110" />
+
+          {/* Pulse Effect */}
+          <div className="pointer-events-none absolute -inset-2 rounded-full border border-white/20 animate-ping opacity-30" />
+        </button>
 
         {/* Text */}
-        <div className="space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-xs font-medium text-emerald-300 tracking-wider uppercase">
-            <Sparkles className="w-3 h-3" />
-            <span>Moonwave</span>
-          </div>
+        <h2 className="mt-5 text-xl font-light tracking-wide text-white sm:text-2xl">
+          Begin Listening
+        </h2>
 
-          <h2 className="text-xl sm:text-2xl font-light tracking-wide text-white text-glow">
-            Begin Listening
-          </h2>
-
-          <p className="text-sm text-white/60 font-light leading-relaxed">
-            Your browser requires a single touch to enable high-fidelity audio
-            playback.
-          </p>
-
-          {trackTitle && (
-            <div className="mt-3 pt-3 border-t border-white/10 text-xs text-white/50 flex items-center justify-center gap-1.5">
-              <Volume2 className="w-3.5 h-3.5 text-white/40" />
-              <span className="truncate max-w-[240px] text-white/70">
-                {trackTitle} {artistName ? `• ${artistName}` : ""}
-              </span>
-            </div>
-          )}
-        </div>
+        <p className="mt-2 text-sm font-light leading-relaxed text-white/60">
+          Click once to start the music.
+        </p>
 
         {/* Button */}
         <button
           onClick={onStart}
-          className="w-full py-3.5 px-6 rounded-2xl bg-white/15 hover:bg-white/25 active:bg-white/30 text-white font-medium text-sm tracking-wider uppercase border border-white/30 transition-all duration-300 shadow-lg cursor-pointer"
+          className="mt-5 w-full cursor-pointer rounded-2xl border border-white/30 bg-white/15 px-6 py-3.5 text-sm font-medium uppercase tracking-wider text-white shadow-lg transition-all duration-300 hover:bg-white/25 active:bg-white/30"
         >
-          Click Anywhere To Listen
+          Start Listening
         </button>
       </div>
     </div>

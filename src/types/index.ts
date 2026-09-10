@@ -10,10 +10,3 @@ export interface Song {
 
 export type MusicMood =
   "mix" | "bollywood" | "regional" | "hollywood" | "cinematic";
-
-export interface LyricLine {
-  time: number; // seconds
-  text: string;
-}
-
-export type LyricsStatus = "idle" | "loading" | "found" | "not_found";
